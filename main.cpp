@@ -127,12 +127,9 @@ int main() {
   digit inputbase;
 
   cout << "Enter two integers and a digit:" << endl;
-  inputI1_str = "90";
-  inputI2_str = "12";
-  inputbase = 10;
-  // cin >> inputI1_str >> inputI2_str >> inputbase;
+  cin >> inputI1_str >> inputI2_str >> inputbase;
 
-  setBase(inputbase);  // Set base to 2 for binary
+  setBase(inputbase);
 
   string reversestringI1(inputI1_str);
   reverse(reversestringI1.begin(), reversestringI1.end());
@@ -143,12 +140,12 @@ int main() {
   // Convert inputI1_str and inputI2_str to integer objects
   integer inputI1(inputI1_str.size());
   for (int i = inputI1_str.size() - 1; i >= 0; i--) {
-    inputI1[i] = reversestringI1[i] - '0';  // Convert char to digit
+    inputI1[i] = reversestringI1[i] - '0';
   }
 
   integer inputI2(inputI2_str.size(), 0);
   for (int i = inputI2_str.size() - 1; i >= 0; i--) {
-    inputI2[i] = reversestringI2[i] - '0';  // Convert char to digit
+    inputI2[i] = reversestringI2[i] - '0';
   }
   integer result_add = add(inputI1, inputI2);
 
