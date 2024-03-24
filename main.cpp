@@ -9,9 +9,9 @@ using namespace std;
 
 typedef unsigned int digit;
 typedef std::vector<digit> integer;
-digit B = 10;
+unsigned int B = 10;
 
-void setBase(digit base) {
+void setBase(unsigned int base) {
   B = base;  // This assigns the value to the global variable B
 }
 int getBase() { return B; }
@@ -126,7 +126,6 @@ int main() {
   string inputI1_str, inputI2_str;
   digit inputbase;
 
-  cout << "Enter two integers and a digit:" << endl;
   cin >> inputI1_str >> inputI2_str >> inputbase;
 
   setBase(inputbase);
@@ -152,20 +151,16 @@ int main() {
   // Use Karatsuba method if the size of inputs is greater than 1
   integer result_mult = Karatsuba(inputI1, inputI2, 4);
 
-  cout << "Multiplication result: ";
-  for (int i = 0; i <= result_mult.size() - 1; i++) {
-    cout << result_mult[i];
-  }
-  cout << endl;
-
-  cout << "School Addition result: ";
   for (int i = result_add.size() - 1; i >= 0; i--) {
     cout << result_add[i];
   }
-  cout << endl;
-
+  cout << " ";
+  for (int i = 0; i <= result_mult.size() - 1; i++) {
+    cout << result_mult[i];
+  }
+  cout << " ";
   // For division, output 0
-  cout << "Division result: 0" << endl;
+  cout << "0" << endl;
 
   return 0;
 }
