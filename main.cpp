@@ -31,7 +31,7 @@ void digitMult(digit I1, digit I2, digit& s, digit& carry) {
   s = prod - carry * B;
 }
 
-digit getDigit(const integer& a, int i) { return (i < a.size() ? a[i] : 0); }
+digit getDigit(const integer& a, size_t i) { return (i < a.size() ? a[i] : 0); }
 
 // The school method (function mult) multiplies a with each
 //  digit of b and then adds it at the appropriate position to the result
@@ -84,7 +84,7 @@ integer add(const integer& a, const integer& b) {
 void sub(integer& a, const integer& b)  // requires a >= b
 {
   digit carry = 0;
-  for (int i = 0; i < a.size(); i++)
+  for (size_t i = 0; i < a.size(); i++)
     if (a[i] >= (getDigit(b, i) + carry)) {
       a[i] = a[i] - getDigit(b, i) - carry;
       carry = 0;
@@ -124,7 +124,7 @@ integer Karatsuba(const integer& a, const integer& b, int n0) {
 
 int main() {
   string inputI1_str, inputI2_str;
-  digit inputbase;
+  unsigned int inputbase;
 
   cin >> inputI1_str >> inputI2_str >> inputbase;
 
@@ -138,12 +138,12 @@ int main() {
 
   // Convert inputI1_str and inputI2_str to integer objects
   integer inputI1(inputI1_str.size());
-  for (int i = inputI1_str.size() - 1; i >= 0; i--) {
+  for (size_t i = inputI1_str.size() - 1; i >= 0; i--) {
     inputI1[i] = reversestringI1[i] - '0';
   }
 
   integer inputI2(inputI2_str.size(), 0);
-  for (int i = inputI2_str.size() - 1; i >= 0; i--) {
+  for (size_t i = inputI2_str.size() - 1; i >= 0; i--) {
     inputI2[i] = reversestringI2[i] - '0';
   }
   integer result_add = add(inputI1, inputI2);
@@ -151,11 +151,11 @@ int main() {
   // Use Karatsuba method if the size of inputs is greater than 1
   integer result_mult = Karatsuba(inputI1, inputI2, 4);
 
-  for (int i = result_add.size() - 1; i >= 0; i--) {
+  for (size_t i = result_add.size() - 1; i >= 0; i--) {
     cout << result_add[i];
   }
   cout << " ";
-  for (int i = 0; i <= result_mult.size() - 1; i++) {
+  for (size_t i = 0; i <= result_mult.size() - 1; i++) {
     cout << result_mult[i];
   }
   cout << " ";
