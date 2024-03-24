@@ -9,186 +9,166 @@ using namespace std;
 
 typedef unsigned int digit;
 typedef std::vector<digit> integer;
+digit B = 10;
 
-// takes inputs of two integers and base, returns sum and carry
-void fullAdder(digit a, digit b, digit c, digit& s, digit& carry,
-               unsigned int base) {
-  if (base == 0) {
-    cerr << "Error: Base cannot be zero." << endl;
-    exit(1);
-  }
+void setBase(digit base) {
+  B = base;  // This assigns the value to the global variable B
+}
+int getBase() { return B; }
 
-  unsigned int sum = a + b + c;
-  carry = sum / base;
-  s = sum % base;
+// adds I1, I2, and c which is carryIn. Outputs carry for the next
+// digit (carryOut) and s (sum)
+void fullAdder(digit I1, digit I2, digit c, digit& s, digit& carry) {
+  unsigned int sum = I1 + I2 + c;
+  carry = sum / B;
+  s = sum - carry * B;
 }
 
-void digitMult(digit a, digit b, digit& s, digit& carry, unsigned int base) {
-  unsigned int prod = a * b;
-  carry = prod / base;
-  s = prod - carry * base;
+// multiplies I1 and I2, B is base, s is sum ouutput, carry is carry out
+void digitMult(digit I1, digit I2, digit& s, digit& carry) {
+  unsigned int prod = I1 * I2;
+  carry = prod / B;
+  s = prod - carry * B;
 }
 
 digit getDigit(const integer& a, int i) { return (i < a.size() ? a[i] : 0); }
 
-void mult(const integer& a, const digit& b, integer& atimesb,
-          unsigned int base) {
+// The school method (function mult) multiplies a with each
+//  digit of b and then adds it at the appropriate position to the result
+//  (function addAt).
+void mult(const integer& a, const digit& b, integer& atimesb) {
   int n = a.size();
-  atimesb.resize(n + 1, 0);
-  digit carry = 0;
+  assert(atimesb.size() == n + 1);
+  digit carry = 0, c, d, cprev = 0;
   for (int i = 0; i < n; i++) {
-    digit d, c;
-    digitMult(a[i], b, d, c, base);
-    d += carry;
-    carry = d / base;
-    atimesb[i] = d % base;
+    digitMult(a[i], b, d, c);
+    fullAdder(d, cprev, carry, atimesb[i], carry);
+    cprev = c;
   }
-  atimesb[n] = carry;
+  d = 0;
+  fullAdder(d, cprev, carry, atimesb[n], carry);
+  assert(carry == 0);
 }
 
-void addAt(integer& p, const integer& atimesbj, int j, unsigned int base) {
+void addAt(integer& p, const integer& atimesbj, int j) {  // p has length n+m,
   digit carry = 0;
   int L = p.size();
-  for (int i = j; i < L; i++) {
-    digit sum = p[i] + getDigit(atimesbj, i - j) + carry;
-    p[i] = sum % base;
-    carry = sum / base;
-  }
-  while (carry > 0) {
-    p.push_back(carry % base);
-    carry /= base;
-  }
+  for (int i = j; i < L; i++)
+    fullAdder(p[i], getDigit(atimesbj, i - j), carry, p[i], carry);
+  assert(carry == 0);
 }
 
-integer mult(const integer& a, const integer& b, unsigned int base) {
+integer mult(const integer& a, const integer& b) {
   int n = a.size();
   int m = b.size();
-  integer result(n + m, 0);
+  integer p(n + m, 0);
+  integer atimesbj(n + 1);
   for (int j = 0; j < m; j++) {
-    integer temp(n + 1, 0);
-    mult(a, b[j], temp, base);
-    for (int i = 0; i < n + 1; i++) {
-      result[i + j] += temp[i];
-      result[i + j + 1] += result[i + j] / base;
-      result[i + j] %= base;
-    }
+    mult(a, b[j], atimesbj);
+    addAt(p, atimesbj, j);
   }
-  return result;
+  return p;
 }
 
-integer add(const integer& a, const integer& b, unsigned int base) {
-  int n = a.size();
-  int m = b.size();
-  integer result(max(n, m) + 1, 0);
+integer add(const integer& a, const integer& b) {
+  int n = max(a.size(), b.size());
+  integer s(n + 1);
   digit carry = 0;
-  for (int i = 0; i < n || i < m; i++) {
-    digit sum = getDigit(a, i) + getDigit(b, i) + carry;
-    result[i] = sum % base;
-    carry = sum / base;
+  for (int i = 0; i < n; i++) {
+    fullAdder(getDigit(a, i), getDigit(b, i), carry, s[i], carry);
   }
-  result.back() = carry;
-  return result;
+  s[n] = carry;
+  return s;
 }
 
-void sub(integer& a, const integer& b, unsigned int base) {
+void sub(integer& a, const integer& b)  // requires a >= b
+{
   digit carry = 0;
   for (int i = 0; i < a.size(); i++)
     if (a[i] >= (getDigit(b, i) + carry)) {
       a[i] = a[i] - getDigit(b, i) - carry;
       carry = 0;
     } else {
-      a[i] = a[i] + base - getDigit(b, i) - carry;
+      a[i] = a[i] + B - getDigit(b, i) - carry;
       carry = 1;
     }
   assert(carry == 0);
 }
 
-void split(const integer& a, integer& a1, integer& a0, int k) {
+void split(const integer& a, integer& a1, integer& a0) {
   int n = a.size();
-  a0.clear();
-  a1.clear();
-  for (int i = 0; i < k; i++) {
-    if (i < n - k) {
-      a0.push_back(a[i]);
-    } else {
-      a1.push_back(a[i]);
-    }
-  }
+  int k = n / 2;
+  for (int i = 0; i < k; i++) a0[i] = a[i];
+  for (int i = 0; i < n - k; i++) a1[i] = a[k + i];
 }
 
-integer Karatsuba(const integer& a, const integer& b, unsigned int base) {
+integer Karatsuba(const integer& a, const integer& b, int n0) {
   int n = a.size();
   int m = b.size();
-
-  if (n == 0 || m == 0) {
-    return integer();
-  }
-  if (n == 1 && m == 1) {
-    digit s, carry;
-    digitMult(a[0], b[0], s, carry, base);
-    integer result;
-    result.push_back(s);
-    if (carry > 0) {
-      result.push_back(carry);
-    }
-    return result;
-  }
-
-  int k = (std::max(n, m) + 1) / 2;
-
-  integer a0, a1, b0, b1;
-  split(a, a1, a0, k);
-  split(b, b1, b0, k);
-
-  integer p2 = Karatsuba(a1, b1, base);
-  integer p0 = Karatsuba(a0, b0, base);
-
-  integer temp1 = add(a1, a0, base);
-  integer temp2 = add(b1, b0, base);
-  integer p1 = Karatsuba(temp1, temp2, base);
-  sub(p1, p0, base);
-  sub(p1, p2, base);
-
-  integer result(2 * k + std::max(p2.size(), p1.size()), 0);
-  addAt(result, p0, 0, base);
-  addAt(result, p2, 2 * k, base);
-  addAt(result, p1, k, base);
-
-  return result;
+  integer p(2 * n);
+  if (n < n0) return mult(a, b);
+  int k = n / 2;
+  integer a0(k), a1(n - k), b0(k), b1(n - k);
+  split(a, a1, a0);
+  split(b, b1, b0);
+  integer p2 = Karatsuba(a1, b1, n0),
+          p1 = Karatsuba(add(a1, a0), add(b1, b0), n0),
+          p0 = Karatsuba(a0, b0, n0);
+  for (int i = 0; i < 2 * k; i++) p[i] = p0[i];
+  for (int i = 2 * k; i < n + m; i++) p[i] = p2[i - 2 * k];
+  sub(p1, p0);
+  sub(p1, p2);
+  addAt(p, p1, k);
+  return p;
 }
 
 int main() {
-  int num1, num2, base;
-  std::cout << "Enter two integers and a base separated by spaces: ";
-  std::cin >> num1 >> num2 >> base;
+  string inputI1_str, inputI2_str;
+  digit inputbase;
 
-  integer a, b;
-  while (num1 > 0) {
-    a.push_back(num1 % base);
-    num1 /= base;
+  cout << "Enter two integers and a digit:" << endl;
+  inputI1_str = "90";
+  inputI2_str = "12";
+  inputbase = 10;
+  // cin >> inputI1_str >> inputI2_str >> inputbase;
+
+  setBase(inputbase);  // Set base to 2 for binary
+
+  string reversestringI1(inputI1_str);
+  reverse(reversestringI1.begin(), reversestringI1.end());
+
+  string reversestringI2(inputI2_str);
+  reverse(reversestringI2.begin(), reversestringI2.end());
+
+  // Convert inputI1_str and inputI2_str to integer objects
+  integer inputI1(inputI1_str.size());
+  for (int i = inputI1_str.size() - 1; i >= 0; i--) {
+    inputI1[i] = reversestringI1[i] - '0';  // Convert char to digit
   }
-  while (num2 > 0) {
-    b.push_back(num2 % base);
-    num2 /= base;
+
+  integer inputI2(inputI2_str.size(), 0);
+  for (int i = inputI2_str.size() - 1; i >= 0; i--) {
+    inputI2[i] = reversestringI2[i] - '0';  // Convert char to digit
   }
+  integer result_add = add(inputI1, inputI2);
 
-  // school addition
-  integer sum = add(a, b, base);
+  // Use Karatsuba method if the size of inputs is greater than 1
+  integer result_mult = Karatsuba(inputI1, inputI2, 4);
 
-  // Karatsuba multiplication
-  integer product = Karatsuba(a, b, base);
-
-  std::cout << "School Addition: ";
-  for (int i = sum.size() - 1; i >= 0; i--) {
-    std::cout << sum[i];
+  cout << "Multiplication result: ";
+  for (int i = 0; i <= result_mult.size() - 1; i++) {
+    cout << result_mult[i];
   }
-  std::cout << std::endl;
+  cout << endl;
 
-  std::cout << "Karatsuba Multiplication: ";
-  for (int i = product.size() - 1; i >= 0; i--) {
-    std::cout << product[i];
+  cout << "School Addition result: ";
+  for (int i = result_add.size() - 1; i >= 0; i--) {
+    cout << result_add[i];
   }
-  std::cout << std::endl;
+  cout << endl;
+
+  // For division, output 0
+  cout << "Division result: 0" << endl;
 
   return 0;
 }
